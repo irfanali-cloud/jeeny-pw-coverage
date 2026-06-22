@@ -6,7 +6,10 @@ const fs = require('fs');
 const path = require('path');
 
 const OUT_DIR = __dirname;
-const cases = JSON.parse(fs.readFileSync(path.join(OUT_DIR, 'all-cases-data.json'), 'utf8'));
+const passengerCases = JSON.parse(fs.readFileSync(path.join(OUT_DIR, 'all-cases-data.json'), 'utf8'))
+  .map(function(c){ return Object.assign({}, c, { app: 'Passenger App' }); });
+const driverCases = JSON.parse(fs.readFileSync(path.join(OUT_DIR, 'driver-payments-cases.json'), 'utf8'));
+const cases = passengerCases.concat(driverCases);
 
 const MODULE_META = {
   "Card Management": {
@@ -68,6 +71,26 @@ const MODULE_META = {
     emoji: "📊",
     desc: "Gateway transaction tagging, refund ratio monitoring, Slack alert triggers, and payment failure tracking across HyperPay and Checkout.",
     tags: ["Gateway Tagging","RF Monitoring","Slack Alert","Refund Ratio"]
+  },
+  "Driver Wallet": {
+    emoji: "👛",
+    desc: "Driver wallet lifecycle including balance top-ups, transaction history, ride earnings crediting, and overpayment handling.",
+    tags: ["Balance","Top-Up","Earnings","Transaction History","Overpayment"]
+  },
+  "Driver STC Pay": {
+    emoji: "📲",
+    desc: "STC Pay payout flows for drivers covering cashout withdrawals, Jeeny service fees on STC Pay withdrawals, and wallet top-ups via STC Pay. Synced with Passenger App STCPay cashout scenarios.",
+    tags: ["Cashout","Payout","Service Fee","Top-Up","Withdrawal","🔗 Sync: Passenger STCPay"]
+  },
+  "Driver Card Management": {
+    emoji: "🪪",
+    desc: "Driver card management including adding, verifying, and removing payment cards for wallet top-ups via HyperPay and Checkout gateways.",
+    tags: ["Add Card","Verify","Remove","HyperPay","Checkout","Mada","3DS"]
+  },
+  "Driver Cancellation & Fraud": {
+    emoji: "🚫",
+    desc: "Driver-side cancellation fines, fraud detection flows, and dispute handling for payment anomalies and suspicious transactions.",
+    tags: ["Cancellation Fine","Fraud","Dispute","FDM","Block","Detection"]
   }
 };
 
@@ -255,8 +278,12 @@ select.filter-select:focus{border-color:#1d4ed8}
     <div class="nav-item" onclick="showPage('tier3')">⚪ Tier 3 <span class="nav-badge" id="nb-t3">605</span></div>
   </div>
   <div class="nav-section">
-    <div class="nav-label">Modules</div>
+    <div class="nav-label">Passenger App</div>
     <div id="module-nav"></div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Driver App</div>
+    <div id="driver-module-nav"></div>
   </div>
 </nav>
 
@@ -268,7 +295,7 @@ select.filter-select:focus{border-color:#1d4ed8}
     <div class="topbar">
       <div>
         <div class="topbar h2" style="font-size:18px;font-weight:700">Payments &amp; Wallets — Test Coverage Overview</div>
-        <div class="sub">Jeeny QA · Project: Passenger App</div>
+        <div class="sub">Jeeny QA · Passenger App + Driver App</div>
       </div>
     </div>
     <div class="content" id="overview-content"></div>
@@ -391,6 +418,10 @@ const tier2 = CASES.filter(c=>c.tier==='Tier 2');
 const tier3 = CASES.filter(c=>c.tier==='Tier 3');
 const byModule = {};
 modules.forEach(m => byModule[m] = CASES.filter(c=>c.module===m));
+const passengerCases = CASES.filter(c=>c.app==='Passenger App');
+const driverCasesAll = CASES.filter(c=>c.app==='Driver App');
+const PASSENGER_MODS = ['Card Management','Apple Pay','Wallet','Credit Card Rides','Cash Rides','Tabby','STCPay','FDM','Mokafaa','Driver Top-Up','Promotions & Restrictions','Payment Observability'];
+const DRIVER_MODS = ['Driver Wallet','Driver STC Pay','Driver Card Management','Driver Cancellation & Fraud'];
 
 // ---- Helpers ----
 function badge(type, text) {
@@ -434,8 +465,15 @@ function showPage(id, extra){
 // ---- Module nav ----
 function buildModuleNav(){
   const nav = document.getElementById('module-nav');
-  const order = ['Card Management','Apple Pay','Wallet','Credit Card Rides','Cash Rides','Tabby','STCPay','FDM','Mokafaa','Driver Top-Up','Promotions & Restrictions','Payment Observability'];
-  nav.innerHTML = order.filter(m=>byModule[m]).map(m=>{
+  nav.innerHTML = PASSENGER_MODS.filter(m=>byModule[m]).map(m=>{
+    const meta = MODULE_META[m]||{};
+    return \`<div class="nav-item" onclick="showPage('module','\${m.replace(/'/g,"\\\\'")}')">
+      <span>\${meta.emoji||'📁'} \${m}</span>
+      <span class="nav-badge">\${(byModule[m]||[]).length}</span>
+    </div>\`;
+  }).join('');
+  const driverNav = document.getElementById('driver-module-nav');
+  driverNav.innerHTML = DRIVER_MODS.filter(m=>byModule[m]).map(m=>{
     const meta = MODULE_META[m]||{};
     return \`<div class="nav-item" onclick="showPage('module','\${m.replace(/'/g,"\\\\'")}')">
       <span>\${meta.emoji||'📁'} \${m}</span>
@@ -445,21 +483,11 @@ function buildModuleNav(){
 }
 
 // ---- Overview ----
-function buildOverview(){
-  const mods = ['Card Management','Apple Pay','Wallet','Credit Card Rides','Cash Rides','Tabby','STCPay','FDM','Mokafaa','Driver Top-Up','Promotions & Restrictions','Payment Observability'];
-  const el = document.getElementById('overview-content');
-  let html = \`<div class="stat-row">
-    <div class="stat-card"><div class="label">Total Cases</div><div class="value blue">\${CASES.length}</div></div>
-    <div class="stat-card"><div class="label">Smoke</div><div class="value green">\${smoke.length}</div></div>
-    <div class="stat-card"><div class="label">Regression</div><div class="value purple">\${regression.length}</div></div>
-    <div class="stat-card"><div class="label">Tier 0</div><div class="value red">\${tier0.length}</div></div>
-    <div class="stat-card"><div class="label">Tier 1</div><div class="value orange">\${tier1.length}</div></div>
-    <div class="stat-card"><div class="label">Tier 2</div><div class="value blue">\${tier2.length}</div></div>
-    <div class="stat-card"><div class="label">Tier 3</div><div class="value">\${tier3.length}</div></div>
-  </div>
-  <div class="module-grid">\`;
-  mods.forEach(m=>{
+function buildModuleCards(modList){
+  let html = '';
+  modList.forEach(m=>{
     const cases = byModule[m]||[];
+    if(!cases.length) return;
     const meta = MODULE_META[m]||{emoji:'📁',desc:'',tags:[]};
     const ms = cases.filter(c=>c.smoke).length;
     const mr = cases.filter(c=>c.regression).length;
@@ -491,7 +519,49 @@ function buildOverview(){
       </div>
     </div>\`;
   });
-  html += \`</div>\`;
+  return html;
+}
+
+function buildOverview(){
+  const el = document.getElementById('overview-content');
+  const pSmoke = passengerCases.filter(c=>c.smoke).length;
+  const pReg = passengerCases.filter(c=>c.regression).length;
+  const dSmoke = driverCasesAll.filter(c=>c.smoke).length;
+  const dReg = driverCasesAll.filter(c=>c.regression).length;
+  let html = \`
+  <div class="stat-row">
+    <div class="stat-card"><div class="label">Total Cases</div><div class="value blue">\${CASES.length}</div></div>
+    <div class="stat-card"><div class="label">Smoke</div><div class="value green">\${smoke.length}</div></div>
+    <div class="stat-card"><div class="label">Regression</div><div class="value purple">\${regression.length}</div></div>
+    <div class="stat-card"><div class="label">Tier 0</div><div class="value red">\${tier0.length}</div></div>
+    <div class="stat-card"><div class="label">Tier 1</div><div class="value orange">\${tier1.length}</div></div>
+    <div class="stat-card"><div class="label">Tier 2</div><div class="value blue">\${tier2.length}</div></div>
+    <div class="stat-card"><div class="label">Tier 3</div><div class="value">\${tier3.length}</div></div>
+  </div>
+  <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+    <div style="flex:1;background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:12px 16px">
+      <div style="font-size:11px;font-weight:700;color:#1d4ed8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">🚗 Passenger App</div>
+      <div style="display:flex;gap:16px;font-size:13px;color:#374151;flex-wrap:wrap">
+        <span>📋 Cases: <strong>\${passengerCases.length}</strong></span>
+        <span>🔥 Smoke: <strong>\${pSmoke}</strong></span>
+        <span>🔁 Regression: <strong>\${pReg}</strong></span>
+        <span>Modules: <strong>\${PASSENGER_MODS.filter(m=>byModule[m]&&byModule[m].length).length}</strong></span>
+      </div>
+    </div>
+    <div style="flex:1;background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:12px 16px">
+      <div style="font-size:11px;font-weight:700;color:#059669;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">🚕 Driver App</div>
+      <div style="display:flex;gap:16px;font-size:13px;color:#374151;flex-wrap:wrap">
+        <span>📋 Cases: <strong>\${driverCasesAll.length}</strong></span>
+        <span>🔥 Smoke: <strong>\${dSmoke}</strong></span>
+        <span>🔁 Regression: <strong>\${dReg}</strong></span>
+        <span>Modules: <strong>\${DRIVER_MODS.filter(m=>byModule[m]&&byModule[m].length).length}</strong></span>
+      </div>
+    </div>
+  </div>
+  <div style="font-size:13px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px;padding-bottom:6px;border-bottom:2px solid #e2e8f0">🚗 Passenger App Modules</div>
+  <div class="module-grid">\${buildModuleCards(PASSENGER_MODS)}</div>
+  <div style="font-size:13px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.06em;margin:20px 0 12px;padding-bottom:6px;border-bottom:2px solid #e2e8f0">🚕 Driver App Modules</div>
+  <div class="module-grid">\${buildModuleCards(DRIVER_MODS)}</div>\`;
   el.innerHTML = html;
 }
 
@@ -499,21 +569,28 @@ function buildOverview(){
 const DIAG_KEY = 'payments-wallets-coverage-diagram-v1';
 let diagData = null;
 
-function buildDiagramData(){
-  // Build hierarchical: root -> module -> section -> cases
-  const root = { name: 'PAYMENTS & WALLETS', type: 'root', children: [] };
-  const mods = ['Card Management','Apple Pay','Wallet','Credit Card Rides','Cash Rides','Tabby','STCPay','FDM','Mokafaa','Driver Top-Up','Promotions & Restrictions','Payment Observability'];
-  mods.forEach(m=>{
-    const mCases = byModule[m]||[];
-    if(!mCases.length) return;
-    const modNode = { name: m, type: 'module', children: [] };
-    const bySec = {};
-    mCases.forEach(c=>{ if(!bySec[c.section]) bySec[c.section]=[]; bySec[c.section].push(c); });
-    Object.entries(bySec).forEach(([sec, cases])=>{
-      modNode.children.push({ name: sec, type: 'section', count: cases.length, cases: cases.map(c=>({id:c.id,title:c.title,tier:c.tier,smoke:c.smoke,regression:c.regression})) });
-    });
-    root.children.push(modNode);
+function buildModuleNode(m){
+  const mCases = byModule[m]||[];
+  if(!mCases.length) return null;
+  const modNode = { name: m, type: 'module', children: [] };
+  const bySec = {};
+  mCases.forEach(c=>{ if(!bySec[c.section]) bySec[c.section]=[]; bySec[c.section].push(c); });
+  Object.entries(bySec).forEach(([sec, cases])=>{
+    modNode.children.push({ name: sec, type: 'section', count: cases.length, cases: cases.map(c=>({id:c.id,title:c.title,tier:c.tier,smoke:c.smoke,regression:c.regression})) });
   });
+  return modNode;
+}
+
+function buildDiagramData(){
+  const root = { name: 'PAYMENTS & WALLETS', type: 'root', children: [] };
+  // Passenger App branch
+  const passBranch = { name: '🚗 PASSENGER APP', type: 'module', children: [] };
+  PASSENGER_MODS.forEach(m=>{ const n=buildModuleNode(m); if(n) passBranch.children.push(n); });
+  root.children.push(passBranch);
+  // Driver App branch
+  const driverBranch = { name: '🚕 DRIVER APP', type: 'module', children: [] };
+  DRIVER_MODS.forEach(m=>{ const n=buildModuleNode(m); if(n) driverBranch.children.push(n); });
+  root.children.push(driverBranch);
   return root;
 }
 
@@ -732,6 +809,31 @@ function renderModuleDetail(modName){
   const both = mCases.filter(c=>c.smoke && c.regression);
   const others = mCases.filter(c=>!c.smoke && !c.regression);
 
+  // STC sync banner for Passenger STCPay: show link to Driver STC Pay
+  const stcPassSyncHtml = (modName === 'STCPay') ? (()=>{
+    const driverStcCases = byModule['Driver STC Pay']||[];
+    if(!driverStcCases.length) return '';
+    return \`<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:12px 16px;margin-bottom:16px">
+      <div style="font-size:12px;font-weight:700;color:#059669;margin-bottom:6px">🔗 Synced with Driver App — STC Pay (\${driverStcCases.length} cases)</div>
+      <div style="font-size:11px;color:#166534">This folder is kept in sync with the Driver STC Pay module (STC Payout, Service Fees, Top-Up). <span style="cursor:pointer;color:#059669;text-decoration:underline" onclick="showPage('module','Driver STC Pay')">View Driver STC Pay →</span></div>
+    </div>\`;
+  })() : '';
+
+  // STC sync banner: for Driver STC Pay, show synced Passenger STCPay cases
+  const stcSyncHtml = (modName === 'Driver STC Pay') ? (()=>{
+    const syncCases = byModule['STCPay']||[];
+    if(!syncCases.length) return '';
+    return \`<div style="background:#fefce8;border:1px solid #fde68a;border-radius:8px;padding:12px 16px;margin-bottom:16px">
+      <div style="font-size:12px;font-weight:700;color:#ca8a04;margin-bottom:8px">🔗 Synced: Passenger App — STCPay (\${syncCases.length} cases)</div>
+      <div style="font-size:11px;color:#78350f;margin-bottom:8px">These Passenger App STCPay cashout cases are kept in sync with this Driver STC Pay module.</div>
+      \${syncCases.map(c=>\`<div class="case-row" style="border-left-color:#ca8a04">
+        <span class="case-id">C\${c.id}</span>
+        <span class="case-title">\${esc(c.title)} <span style="color:#94a3b8;font-size:10px">· Passenger STCPay</span></span>
+        <span class="case-badges">\${tierBadge(c.tier)}\${c.smoke?badge('smoke','Smoke'):''}\${c.regression?badge('regression','Reg'):''}\${badge(c.priority,c.priority)}</span>
+      </div>\`).join('')}
+    </div>\`;
+  })() : '';
+
   let html = \`
     <div class="detail-desc">\${meta.desc}</div>
     <div class="detail-stats">
@@ -741,6 +843,8 @@ function renderModuleDetail(modName){
       <div class="detail-stat"><div class="ds-val" style="color:#d97706">\${prioLabel}</div><div class="ds-lbl">Avg Priority</div></div>
     </div>
     <div class="tags" style="margin-bottom:16px">\${(meta.tags||[]).map(t=>\`<span class="tag">\${t}</span>\`).join('')}</div>
+    \${stcPassSyncHtml}
+    \${stcSyncHtml}
     <div class="filter-bar" style="margin-bottom:12px">
       <input type="text" class="search-input" id="mod-search" placeholder="🔍 Search in \${esc(modName)}..." oninput="filterModCases('\${modName.replace(/'/g,"\\\\'")}')">
     </div>

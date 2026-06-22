@@ -80,7 +80,7 @@ const MODULE_META = {
   "Driver STC Pay": {
     emoji: "📲",
     desc: "STC Pay payout flows for drivers covering cashout withdrawals, Jeeny service fees on STC Pay withdrawals, and wallet top-ups via STC Pay. Synced with Passenger App STCPay cashout scenarios.",
-    tags: ["Cashout","Payout","Service Fee","Top-Up","Withdrawal","🔗 Sync: Passenger STCPay"]
+    tags: ["Cashout","Payout","Service Fee","Top-Up","Withdrawal"]
   },
   "Driver Card Management": {
     emoji: "🪪",
@@ -809,30 +809,8 @@ function renderModuleDetail(modName){
   const both = mCases.filter(c=>c.smoke && c.regression);
   const others = mCases.filter(c=>!c.smoke && !c.regression);
 
-  // STC sync banner for Passenger STCPay: show link to Driver STC Pay
-  const stcPassSyncHtml = (modName === 'STCPay') ? (()=>{
-    const driverStcCases = byModule['Driver STC Pay']||[];
-    if(!driverStcCases.length) return '';
-    return \`<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:12px 16px;margin-bottom:16px">
-      <div style="font-size:12px;font-weight:700;color:#059669;margin-bottom:6px">🔗 Synced with Driver App — STC Pay (\${driverStcCases.length} cases)</div>
-      <div style="font-size:11px;color:#166534">This folder is kept in sync with the Driver STC Pay module (STC Payout, Service Fees, Top-Up). <span style="cursor:pointer;color:#059669;text-decoration:underline" onclick="showPage('module','Driver STC Pay')">View Driver STC Pay →</span></div>
-    </div>\`;
-  })() : '';
-
-  // STC sync banner: for Driver STC Pay, show synced Passenger STCPay cases
-  const stcSyncHtml = (modName === 'Driver STC Pay') ? (()=>{
-    const syncCases = byModule['STCPay']||[];
-    if(!syncCases.length) return '';
-    return \`<div style="background:#fefce8;border:1px solid #fde68a;border-radius:8px;padding:12px 16px;margin-bottom:16px">
-      <div style="font-size:12px;font-weight:700;color:#ca8a04;margin-bottom:8px">🔗 Synced: Passenger App — STCPay (\${syncCases.length} cases)</div>
-      <div style="font-size:11px;color:#78350f;margin-bottom:8px">These Passenger App STCPay cashout cases are kept in sync with this Driver STC Pay module.</div>
-      \${syncCases.map(c=>\`<div class="case-row" style="border-left-color:#ca8a04">
-        <span class="case-id">C\${c.id}</span>
-        <span class="case-title">\${esc(c.title)} <span style="color:#94a3b8;font-size:10px">· Passenger STCPay</span></span>
-        <span class="case-badges">\${tierBadge(c.tier)}\${c.smoke?badge('smoke','Smoke'):''}\${c.regression?badge('regression','Reg'):''}\${badge(c.priority,c.priority)}</span>
-      </div>\`).join('')}
-    </div>\`;
-  })() : '';
+  const stcPassSyncHtml = '';
+  const stcSyncHtml = '';
 
   let html = \`
     <div class="detail-desc">\${meta.desc}</div>

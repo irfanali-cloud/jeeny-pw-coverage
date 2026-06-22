@@ -492,45 +492,7 @@ function buildOverview(){
     </div>\`;
   });
   html += \`</div>\`;
-  html += buildAnalysis();
   el.innerHTML = html;
-}
-
-function buildAnalysis(){
-  return \`<div class="analysis-section">
-    <h3>Coverage Analysis &amp; Recommendations</h3>
-
-    <div style="font-size:14px;font-weight:700;color:#1e293b;margin:12px 0 6px">🔥 Smoke Assessment (9/761 = 1.2%)</div>
-    <div class="finding critical"><span class="finding-icon">🚨</span><div><strong>Critical gap:</strong> Checkout gateway — 135 cases, 0 smoke. Active production gateway for CC and Apple Pay rides.</div></div>
-    <div class="finding critical"><span class="finding-icon">🚨</span><div><strong>Critical gap:</strong> Apple Pay Skip Destination — 110 cases, 0 smoke. New major feature with complex brand/region logic.</div></div>
-    <div class="finding critical"><span class="finding-icon">🚨</span><div><strong>Critical gap:</strong> Wallet &amp; Cancellation Fines — 47 cases, 0 smoke. Cancellation fine debit is a primary revenue-protection mechanism.</div></div>
-    <div class="finding info"><span class="finding-icon">💡</span><div><strong>Recommended additions:</strong> C21016 (Add Card Checkout), C21041 (CC Ride Checkout E2E), C38692 (Apple Pay Skip Destination ride), C72878 (Cancellation Fine wallet debit), C18000 (Cash block gate), C22579 (Auto Enable Wallet toggle).</div></div>
-    <div class="finding success"><span class="finding-icon">🎯</span><div><strong>Recommended smoke target: 25 cases</strong> (up from 9).</div></div>
-
-    <div style="font-size:14px;font-weight:700;color:#1e293b;margin:16px 0 6px">🔁 Regression Assessment (142/761 = 18.7%)</div>
-    <div class="finding warning"><span class="finding-icon">⚠️</span><div><strong>Hard cutoff exists:</strong> all folders created in the last 12 months have 0% regression vs. older folders at 100%.</div></div>
-    <div class="finding critical"><span class="finding-icon">🚨</span><div><strong>Biggest zero-regression gaps:</strong> Add Card/CC Checkout (135 cases), Apple Pay Skip Destination (110 cases), Wallet &amp; Cancellation Fines (47 cases), Payment Observability (30 cases), Auto Enable Wallet (21 cases), Tabby New Registration (20 cases).</div></div>
-    <div class="finding info"><span class="finding-icon">💡</span><div><strong>Recommended additions:</strong> 78 cases across the 6 zero-coverage folders.</div></div>
-    <div class="finding success"><span class="finding-icon">🎯</span><div><strong>Recommended regression target: 220 cases</strong> (up from 142).</div></div>
-
-    <div style="font-size:14px;font-weight:700;color:#1e293b;margin:16px 0 6px">⚖️ Tier Assessment</div>
-    <div class="finding warning"><span class="finding-icon">⚠️</span><div><strong>79.5% of cases (605) are Tier 3</strong> — this is the default field value, not a deliberate classification.</div></div>
-    <div class="finding critical"><span class="finding-icon">🚨</span><div><strong>Critical Checkout gateway flows incorrectly at Tier 3:</strong> CC Ride Pre-auth (C21051), Apple Pay Success (C21081), Mada Ride Success (C21067).</div></div>
-    <div class="finding info"><span class="finding-icon">💡</span><div>Recommend promoting ~38 cases to Tier 1/2 and demoting ~8 UI-navigation cases from Tier 1 to Tier 2.</div></div>
-
-    <div style="font-size:14px;font-weight:700;color:#1e293b;margin:16px 0 8px">📋 Recommendation Summary</div>
-    <table class="rec-table">
-      <thead><tr><th>Category</th><th>Current</th><th>Recommended</th><th>Delta</th></tr></thead>
-      <tbody>
-        <tr><td>Tier 0</td><td>5</td><td>12</td><td class="delta-pos">+7</td></tr>
-        <tr><td>Tier 1</td><td>127</td><td>165</td><td class="delta-pos">+38</td></tr>
-        <tr><td>Tier 2</td><td>24</td><td>95</td><td class="delta-pos">+71</td></tr>
-        <tr><td>Tier 3</td><td>605</td><td>489</td><td class="delta-neg">−116</td></tr>
-        <tr><td>Smoke</td><td>9</td><td>25</td><td class="delta-pos">+16</td></tr>
-        <tr><td>Regression</td><td>142</td><td>220</td><td class="delta-pos">+78</td></tr>
-      </tbody>
-    </table>
-  </div>\`;
 }
 
 // ---- Diagram ----

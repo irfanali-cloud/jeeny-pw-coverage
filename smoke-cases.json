@@ -1,0 +1,24 @@
+[
+    {
+        "id":  36169,
+        "title":  "User is able to add card successfully (hyperpay gateway is enabled)",
+        "tier":  "Tier 0",
+        "smoke":  true,
+        "regression":  true,
+        "priority":  "High",
+        "module":  "Card Management",
+        "section":  "Add card / Delete card",
+        "folder":  "Payments \u0026 Wallets / Add card / Delete card"
+    },
+    {
+        "id":  12470,
+        "title":  "Verify apple pay ride with promo code applied and wallet enabled while ride creation",
+        "tier":  "Tier 0",
+        "smoke":  true,
+        "regression":  true,
+        "priority":  "High",
+        "module":  "Apple Pay",
+        "section":  "Apple pay rides",
+        "folder":  "Payments \u0026 Wallets / Apple pay rides"
+    }
+]
